@@ -4,23 +4,76 @@ import time
 import os
 import threading
 import subprocess
-import webbrowser
 from typing import List, Dict
 
-testing_mode = True
+IsProduction = True  # 🔁 Toggle this to False for Windows paths
+testing_mode = False
+
+# Set paths based on IsProduction
+if IsProduction:
+    ICON_DIR = "/home/goober/breeze-main/icons"
+    FONT_PATH = "/home/goober/breeze-main/SFPRODISPLAYBOLD.OTF"
+    LOCK_WALLPAPER = "/home/goober/breeze-main/result.jpg"
+    HOME_WALLPAPER = "/home/goober/breeze-main/result2.png"
+else:
+    ICON_DIR = r"C:\Users\danbo\Downloads\icons"
+    FONT_PATH = r"C:\users\danbo\Downloads\sf-pro-display\SFPRODISPLAYBOLD.OTF"
+    LOCK_WALLPAPER = r"C:\Users\danbo\Downloads\result.jpg"
+    HOME_WALLPAPER = r"C:\Users\danbo\Downloads\result2.png"
 
 apps: List[Dict[str, object]] = [
-    {"name": "Phone",    "icon": "phone.png",    "exec": ["start", "notepad.exe"]},
-    {"name": "Messages", "icon": "messages.png", "exec": ["start", "notepad.exe"]},
-    {"name": "Camera",   "icon": "camera.png",   "exec": ["start", "notepad.exe"]},
-    {"name": "Photos",   "icon": "photos.png",   "exec": ["start", "notepad.exe"]},
-    {"name": "YouTube",  "icon": "youtube.png",  "exec": ["notepad.exe"]},
-    {"name": "Music",    "icon": "music.png",    "exec": ["start", "notepad.exe"]},
-    {"name": "Settings", "icon": "settings.png", "exec": ["notepad.exe"]},
-    {"name": "Maps",     "icon": "maps.png",     "exec": ["start", "notepad.exe"]},
-    {"name": "Mail",     "icon": "mail.png",     "exec": ["start", "notepad.exe"]},
-    {"name": "Browser",  "icon": "browser.png",  "exec": ["notepad.exe"]},
+    {
+        "name": "Phone",
+        "icon": "phone.png",
+        "exec": ["pkill", "weston"] if IsProduction else ["start", "notepad.exe"]
+    },
+    {
+        "name": "Messages",
+        "icon": "messages.png",
+        "exec": ["firefox-esr", "--kiosk", "https://web.whatsapp.com"] if IsProduction else ["start", "notepad.exe"]
+    },
+    {
+        "name": "Camera",
+        "icon": "camera.png",
+        "exec": ["thunar"] if IsProduction else ["start", "notepad.exe"]
+    },
+    {
+        "name": "Photos",
+        "icon": "photos.png",
+        "exec": ["firefox-esr", "--kiosk", "https://photos.google.com"] if IsProduction else ["start", "notepad.exe"]
+    },
+    {
+        "name": "YouTube",
+        "icon": "youtube.png",
+        "exec": ["firefox-esr", "--kiosk", "https://youtube.com"] if IsProduction else ["notepad.exe"]
+    },
+    {
+        "name": "Music",
+        "icon": "music.png",
+        "exec": ["firefox-esr", "--kiosk", "https://spotify.com"] if IsProduction else ["start", "notepad.exe"]
+    },
+    {
+        "name": "Settings",
+        "icon": "settings.png",
+        "exec": ["firefox-esr", "about:preferences"] if IsProduction else ["notepad.exe"]
+    },
+    {
+        "name": "Maps",
+        "icon": "maps.png",
+        "exec": ["firefox-esr", "--kiosk", "https://maps.google.com"] if IsProduction else ["start", "notepad.exe"]
+    },
+    {
+        "name": "Mail",
+        "icon": "mail.png",
+        "exec": ["firefox-esr", "--kiosk", "https://mail.google.com"] if IsProduction else ["start", "notepad.exe"]
+    },
+    {
+        "name": "Browser",
+        "icon": "browser.png",
+        "exec": ["firefox-esr"] if IsProduction else ["notepad.exe"]
+    },
 ]
+
 
 def log(msg: str):
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {msg}")
@@ -56,8 +109,7 @@ def main(page: ft.Page):
         gradient_height, swipe_threshold = 300, 200
         clock_top_padding = 150
         icon_size, icon_font_size = 70, 12
-        grid_spacing, grid_padding, grid_columns = 20, 50, 4
-        shadow_blur, shadow_offset = 15, 4
+        grid_spacing, grid_padding, grid_columns = 4, 50, 4
         icon_shadow_blur = 15
         icon_shadow_offset = ft.Offset(0, 4)
         icon_shadow_color = "#80000000"
@@ -70,7 +122,6 @@ def main(page: ft.Page):
         clock_top_padding = 200
         icon_size, icon_font_size = 120, 18
         grid_spacing, grid_padding, grid_columns = 40, 100, 4
-        shadow_blur, shadow_offset = 25, 8
         icon_shadow_blur = 25
         icon_shadow_offset = ft.Offset(0, 6)
         icon_shadow_color = "#80000000"
@@ -87,10 +138,9 @@ def main(page: ft.Page):
     page.vertical_alignment = ft.MainAxisAlignment.CENTER
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
 
-    font_path = r"C:\users\danbo\Downloads\sf-pro-display\SFPRODISPLAYBOLD.OTF"
-    font_family = "SF Pro Display" if os.path.exists(font_path) else "Arial"
-    if os.path.exists(font_path):
-        page.fonts = {"SF Pro Display": font_path}
+    font_family = "SF Pro Display" if os.path.exists(FONT_PATH) else "Arial"
+    if os.path.exists(FONT_PATH):
+        page.fonts = {"SF Pro Display": FONT_PATH}
     text_color = "#FFFFFF"
 
     time_display = ft.Text(value="", size=time_font_size, color=text_color, weight=ft.FontWeight.W_100,
@@ -112,7 +162,7 @@ def main(page: ft.Page):
     update_time()
 
     lock_background = ft.Image(
-        src=r"C:\Users\danbo\Downloads\result.jpg",
+        src=LOCK_WALLPAPER,
         width=width, height=height, fit=ft.ImageFit.COVER,
     )
     bottom_gradient = ft.Container(
@@ -152,21 +202,7 @@ def main(page: ft.Page):
     def launch_app(exec_cmd: List[str], app_name: str):
         try:
             log(f"🚀 Launching {app_name} -> {' '.join(exec_cmd)}")
-            try:
-                # Handle different command formats
-                if exec_cmd[0] == "start":
-                    subprocess.Popen(exec_cmd[1:], shell=True)
-                elif exec_cmd[0] == "explorer":
-                    os.startfile(exec_cmd[1])
-                else:
-                    subprocess.Popen(exec_cmd, shell=True)
-            except Exception as e:
-                log(f"⚠️ subprocess failed: {e}")
-                try:
-                    # Fallback to os.system
-                    os.system(" ".join(exec_cmd))
-                except Exception as e:
-                    log(f"⚠️ os.system failed: {e}")
+            subprocess.Popen(exec_cmd)
         except Exception as e:
             log(f"❌ Launch failed for {app_name}: {e}")
 
@@ -176,8 +212,8 @@ def main(page: ft.Page):
             name = app_info["name"]
             icon_file = app_info["icon"]
             exec_cmd = app_info["exec"]
+            icon_path = os.path.join(ICON_DIR, icon_file)
 
-            # Create icon container with shadow
             icon_container = ft.Container(
                 width=icon_size,
                 height=icon_size,
@@ -190,11 +226,10 @@ def main(page: ft.Page):
                 ),
                 clip_behavior=ft.ClipBehavior.ANTI_ALIAS,
             )
-            
-            # Add content to icon container
-            if os.path.exists(f"icons/{icon_file}"):
+
+            if os.path.exists(icon_path):
                 icon_container.content = ft.Image(
-                    src=f"icons/{icon_file}",
+                    src=icon_path,
                     fit=ft.ImageFit.CONTAIN
                 )
             else:
@@ -206,28 +241,27 @@ def main(page: ft.Page):
                     alignment=ft.alignment.center,
                     content=ft.Text(name[0], size=icon_size//2, color="white")
                 )
-            
+
             text = ft.Text(
-                value=name, size=icon_font_size, color=text_color, 
+                value=name, size=icon_font_size, color=text_color,
                 text_align=ft.TextAlign.CENTER, font_family=font_family,
                 width=icon_size + 20,
             )
-            
-            # Create button with visual feedback
+
             btn = ft.FilledButton(
                 content=ft.Container(
                     content=ft.Column(
-                        [icon_container, text], 
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER, 
+                        [icon_container, text],
+                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
                         spacing=5
                     ),
                     alignment=ft.alignment.center,
                     padding=5,
                 ),
                 style=ft.ButtonStyle(
-                    bgcolor="#00000000",  # Transparent
-                    shadow_color="#00000000",  # Transparent
-                    overlay_color="#20FFFFFF",  # Semi-transparent white
+                    bgcolor="#00000000",
+                    shadow_color="#00000000",
+                    overlay_color="#20FFFFFF",
                     shape=ft.RoundedRectangleBorder(radius=10)
                 ),
                 on_click=lambda e, cmd=exec_cmd, nm=name: launch_app(cmd, nm),
@@ -244,7 +278,7 @@ def main(page: ft.Page):
         )
 
     home_background = ft.Image(
-        src=r"C:\Users\danbo\Downloads\result2.png",
+        src=HOME_WALLPAPER,
         width=width, height=height, fit=ft.ImageFit.COVER,
     )
     home_overlay = ft.Container(
@@ -254,10 +288,9 @@ def main(page: ft.Page):
         ),
         width=width, height=height,
     )
-    
-    # Create the app grid
+
     app_grid = create_app_grid()
-    
+
     home_screen_stack = ft.Stack(
         controls=[home_background, home_overlay, app_grid],
         visible=False,
@@ -277,8 +310,6 @@ def main(page: ft.Page):
             lock_screen_container.top = -height
             lock_screen_container.opacity = 0
             home_screen_stack.visible = True
-            
-            # Completely remove gesture detector after unlock
             if gesture_detector in main_stack.controls:
                 main_stack.controls.remove(gesture_detector)
                 main_stack.update()
@@ -286,7 +317,6 @@ def main(page: ft.Page):
             lock_screen_container.top = 0
             lock_screen_container.opacity = 1
             lock_screen_container.update()
-            
         page.update()
 
     gesture_detector = ft.GestureDetector(
@@ -345,11 +375,5 @@ def main(page: ft.Page):
             log("Window closed")
 
     page.on_window_event = on_window_event
-
-    # REMOVED THE RED BORDER TESTING CODE - NO MORE RED OUTLINE!
-    # This is what was causing the red outline:
-    # if testing_mode:
-    #    for button in app_grid.controls:
-    #        button.content.content.controls[0].border = ft.border.all(1, "red")
 
 ft.app(target=main)
